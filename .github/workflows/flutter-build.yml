@@ -1,0 +1,44 @@
+name: Flutter Flet APK Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.29.2'
+          channel: 'stable'
+
+      - name: Install dependencies
+        run: |
+          flutter clean
+          flutter pub get
+
+      - name: Force dependency overrides
+        run: |
+          echo "dependency_overrides:" >> pubspec.yaml
+          echo "  webview_flutter: 4.4.4" >> pubspec.yaml
+          echo "  webview_flutter_android: 3.16.2" >> pubspec.yaml
+          echo "  webview_flutter_platform_interface: 2.10.0" >> pubspec.yaml
+
+      - name: Get dependencies (again after overrides)
+        run: flutter pub get
+
+      - name: Build APK
+        run: flutter build apk --release
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release
+          path: build/app/outputs/flutter-apk/app-release.apk
